@@ -9,7 +9,7 @@ using namespace std;
 
 class ChristmasTree {
  public:
-  ChristmasTree(vector<size_t> treeDescription, vector<size_t> colours);
+  explicit ChristmasTree(vector<size_t> treeDescription, vector<size_t> colours);
 
   bool isSubtreeAlmostSingleColour(size_t node);
 
