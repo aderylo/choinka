@@ -1,5 +1,5 @@
-#ifndef CHOINKA_TREE
-#define CHOINKA_TREE
+#ifndef CHOINKA_SEGMENT_TREE
+#define CHOINKA_SEGMENT_TREE
 
 #include <set>
 #include <vector>
@@ -24,9 +24,9 @@ class SegmentTree {
  public:
   SegmentTree(vector<size_t> leafs);
 
-  bool almostHomogenous(size_t start, size_t end);
+  bool almostHomogenousSegment(size_t start, size_t end);
 
-  void setValue(size_t leaf);
+  void setValue(size_t leaf, size_t value);
 
  private:
   vector<SegmentTreeNode> tree;
@@ -36,4 +36,4 @@ SegmentTree::SegmentTree(vector<size_t> leafs) {
   this->tree;
 }
 
-#endif  // CHOINKA_TREE
+#endif  // CHOINKA_SEGMENT_TREE

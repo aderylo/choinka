@@ -1,5 +1,5 @@
-#ifndef CHOINKA_UTIL
-#define CHOINKA_UTIL
+#ifndef CHOINKA_SIMPLE_TREE
+#define CHOINKA_SIMPLE_TREE
 
 #include <stdlib.h>
 #include <vector>
@@ -75,10 +75,8 @@ size_t SimpleTree::recursiveSubtreeSize(vector<size_t>& sizes, size_t currentNod
 vector<size_t> SimpleTree::getSubTreeSizes() {
   vector<size_t> sizes(children.size(), 0);
   recursiveSubtreeSize(sizes, 1);
-  // remove first elem since it doesn't signify anything
-  sizes.erase(sizes.begin(), sizes.begin() + 1);
   return sizes;
 }
 
 
-#endif  // CHOINKA_UTIL
+#endif  // CHOINKA_SIMPLE_TREE
