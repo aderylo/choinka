@@ -59,7 +59,11 @@ void SegmentTree::build(vector<size_t> a, size_t v, size_t tl, size_t tr) {
     build(a, v * 2 + 1, tm + 1, tr);
 
     multiset<size_t> values = tree.at(v * 2).values;
-    values.merge(tree.at(v * 2 + 1).values);
+    auto it = tree.at(v * 2 + 1).values.begin();
+    while (it != tree.at(v * 2 + 1).values.end()) {
+      values.insert(*it);
+      it++;
+    }
 
     tree.at(v) = SegmentTreeNode(tl, tr, values);
   }
@@ -86,7 +90,8 @@ void SegmentTree::updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, si
 }
 
 void SegmentTree::setValue(size_t elemIdx, size_t value) {
-  updateValue(1, elemIdx, 0, leafs.size() - 1, value, leafs.at(elemIdx - 1));
+  updateValue(1, elemIdx, 0, leafs.size() - 1, value, leafs.at(elemIdx));
+  leafs.at(elemIdx) = value;
 }
 
 
@@ -137,12 +142,14 @@ bool isAlmostHomogenous(multiset<size_t> ms) {
     fstValCounter++;
     sndValCounter++;
 
-    if (fstValCounter) {
+    if (fstValCounter > 1 and sndValCounter > 1) {
       almostHomogenous = false;
       break;
     }
 
     fstValPtr++;
+    if (*fstValPtr == *sndValPtr)
+      break;
     sndValPtr++;
   }
 

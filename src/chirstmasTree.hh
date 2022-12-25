@@ -18,6 +18,7 @@ class ChristmasTree {
  private:
   SegmentTree segmentTree;
   vector<pair<size_t, size_t>> subtreeRanges;
+  // vector<size_t> preOrderMap; // key: node, value: idx in preOrder
 };
 
 ChristmasTree::ChristmasTree(vector<size_t> treeDescription, vector<size_t> colours) {
@@ -43,7 +44,8 @@ bool ChristmasTree::isSubtreeAlmostSingleColour(size_t node) {
 }
 
 void ChristmasTree::changeNodeColour(size_t node, size_t colour) {
-  segmentTree.setValue(node, colour);
+  auto preOrderIdx = subtreeRanges.at(node).first - 1;
+  segmentTree.setValue(preOrderIdx, colour);
 }
 
 
