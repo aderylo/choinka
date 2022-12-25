@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-#include "src/chirstmasTree.hh"
+#include "chirstmasTree.hh"
 
 using namespace std;
 

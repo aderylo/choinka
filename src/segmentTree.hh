@@ -3,17 +3,23 @@
 
 #define MULTIPLE 4
 
+#include <algorithm>
 #include <set>
 #include <vector>
 
 using namespace std;
 
-class SegmentTreeNode {
- public:
-  explicit SegmentTreeNode(size_t start, size_t end, multiset<size_t> values) {
+struct SegmentTreeNode {
+  SegmentTreeNode(size_t start, size_t end, multiset<size_t> values) {
     this->start = start;
     this->end = end;
     this->values = values;
+  }
+
+  SegmentTreeNode() {
+    this->start = 0;
+    this->end = 0;
+    this->values = multiset<size_t>();
   }
 
   multiset<size_t> values;
@@ -34,6 +40,10 @@ class SegmentTree {
   void updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, size_t newValue,
                    size_t oldValue);
   void build(vector<size_t> a, size_t v, size_t tl, size_t tr);
+
+  multiset<size_t> query(size_t v, size_t tl, size_t tr, size_t start, size_t end);
+
+  bool checkIfHomogenousSegment(size_t start, size_t end, size_t v, size_t tl, size_t tr);
 
   vector<SegmentTreeNode> tree;
   vector<size_t> leafs;
@@ -79,6 +89,90 @@ void SegmentTree::setValue(size_t elemIdx, size_t value) {
   updateValue(1, elemIdx, 0, leafs.size() - 1, value, leafs.at(elemIdx));
 }
 
-// bool SegmentTree::almostHomogenousSegment(size_t start, size_t end) {}
+
+bool containsMoreThanTwoValues(multiset<size_t> ms) {
+  if (ms.empty())
+    return false;
+
+  auto it = ms.begin();
+  size_t counter = 0;
+
+  while (it != ms.end()) {
+    counter++;
+    it = upper_bound(ms.begin(), ms.end(), *it);
+    if (counter > 2)
+      break;
+  }
+
+  return (counter > 2);
+}
+
+bool containsOneValue(multiset<size_t> ms) {
+  if (ms.empty())
+    return false;
+
+  auto it = ms.begin();
+  it = upper_bound(ms.begin(), ms.end(), *it);
+
+  return (it == ms.end());
+}
+
+bool isAlmostHomogenous(multiset<size_t> ms) {
+  if (ms.empty())
+    return true;
+
+  if (containsMoreThanTwoValues(ms))
+    return false;
+
+  if (containsOneValue(ms))
+    return true;
+
+  // now we know that mset contains exactly 2 values;
+  auto fstValPtr = ms.begin();
+  auto sndValPtr = upper_bound(ms.begin(), ms.end(), *fstValPtr);
+  size_t fstValCounter = 0, sndValCounter = 0;
+  bool almostHomogenous = true;
+
+  while (fstValPtr != ms.end() && sndValPtr != ms.end()) {
+    fstValCounter++;
+    sndValCounter++;
+
+    if (fstValCounter) {
+      almostHomogenous = false;
+      break;
+    }
+
+    fstValPtr++;
+    sndValPtr++;
+  }
+
+  return almostHomogenous;
+}
+
+
+multiset<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t start, size_t end) {
+  // possible speed up, return only 3 elems or sth like false if one
+  // segment already is not homogenous;
+
+  if (tl == start && tr == end)
+    return tree.at(v).values;
+
+  size_t tm = (tl + tr) / 2;
+  multiset<size_t> result;
+
+  if (start <= tm)
+    result.merge(query(v * 2, tl, tm, start, tm));
+
+  if (end > tm)
+    result.merge(query(v * 2 + 1, tm + 1, tr, tm + 1, end));
+
+  return result;
+}
+
+
+bool SegmentTree::almostHomogenousSegment(size_t start, size_t end) {
+  auto segment = query(1, 0, leafs.size() - 1, start, end);
+  return isAlmostHomogenous(segment);
+}
 
 #endif  // CHOINKA_SEGMENT_TREE

@@ -2,9 +2,9 @@
 #define CHOINKA_TREE
 
 #include <map>
-#include <src/simpleTree.hh>
 #include <vector>
-#include "src/segmentTree.hh"
+#include "segmentTree.hh"
+#include "simpleTree.hh"
 using namespace std;
 
 class ChristmasTree {
