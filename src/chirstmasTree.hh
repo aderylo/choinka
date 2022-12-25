@@ -39,7 +39,7 @@ ChristmasTree::ChristmasTree(vector<size_t> treeDescription, vector<size_t> colo
 
 bool ChristmasTree::isSubtreeAlmostSingleColour(size_t node) {
   auto range = subtreeRanges.at(node);
-  return segmentTree.almostHomogenousSegment(range.first, range.second);
+  return segmentTree.almostHomogenousSegment(range.first - 1, range.second - 1);
 }
 
 void ChristmasTree::changeNodeColour(size_t node, size_t colour) {

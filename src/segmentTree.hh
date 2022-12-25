@@ -52,7 +52,7 @@ class SegmentTree {
 void SegmentTree::build(vector<size_t> a, size_t v, size_t tl, size_t tr) {
   if (tl == tr) {
     tree.at(v) = SegmentTreeNode(tl, tr, {a.at(tl)});
-  } else {
+  } else if (tl < tr) {
     size_t tm = (tl + tr) / 2;
 
     build(a, v * 2, tl, tm);
@@ -79,14 +79,14 @@ void SegmentTree::updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, si
   if (tl != tr) {
     size_t tm = (tl + tr) / 2;
     if (elemIdx <= tm)
-      updateValue(v * 2, elemIdx, tl, tr, newValue, oldValue);
+      updateValue(v * 2, elemIdx, tl, tm, newValue, oldValue);
     else
       updateValue(v * 2 + 1, elemIdx, tm + 1, tr, newValue, oldValue);
   }
 }
 
 void SegmentTree::setValue(size_t elemIdx, size_t value) {
-  updateValue(1, elemIdx, 0, leafs.size() - 1, value, leafs.at(elemIdx));
+  updateValue(1, elemIdx, 0, leafs.size() - 1, value, leafs.at(elemIdx - 1));
 }
 
 
