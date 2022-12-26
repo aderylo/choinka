@@ -42,12 +42,12 @@ bool occursMoreThanOnce(const multiset<size_t> &ms, size_t value) {
   multiset<size_t>::iterator it;
   it = (value > 0) ? upper_bound(ms.begin(), ms.end(), value - 1) : ms.begin();
 
-  while (it != ms.end() && counter < 2) {
+  while (it != ms.end() && counter < 3 && *it == value) {
     counter++;
     it++;
   }
 
-  return (counter < 2);
+  return (counter > 1);
 }
 
 bool isAlmostHomogenous(multiset<size_t> ms) {
@@ -69,7 +69,6 @@ bool isAlmostHomogenous(multiset<size_t> ms) {
 
   return almostHomogenous;
 }
-
 
 vector<size_t> getSubtreeColors(const vector<vector<size_t>> &children,
                                 const vector<size_t> &colors, const size_t &node) {
