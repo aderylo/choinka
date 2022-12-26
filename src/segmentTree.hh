@@ -75,9 +75,15 @@ SegmentTree::SegmentTree(vector<size_t> elems) {
   leafs = elems;
 }
 
+void removeOneElemOfGivenValue(multiset<size_t> &ms, size_t value) {
+  multiset<size_t>::iterator hit(ms.find(value));
+  if (hit != ms.end())
+    ms.erase(hit);
+}
+
 void SegmentTree::updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, size_t newValue,
                               size_t oldValue) {
-  tree.at(v).values.erase(oldValue);
+  removeOneElemOfGivenValue(tree.at(v).values, oldValue);
   tree.at(v).values.insert(newValue);
 
   if (tl != tr) {
@@ -135,25 +141,12 @@ bool isAlmostHomogenous(multiset<size_t> ms) {
   // now we know that mset contains exactly 2 values;
   auto fstValPtr = ms.begin();
   auto sndValPtr = upper_bound(ms.begin(), ms.end(), *fstValPtr);
-  size_t fstValCounter = 0, sndValCounter = 0;
-  bool almostHomogenous = true;
+  auto sndVal = *sndValPtr;
 
-  while (fstValPtr != ms.end() && sndValPtr != ms.end()) {
-    fstValCounter++;
-    sndValCounter++;
+  bool onlyOneFirstVal = *(++fstValPtr) == sndVal;
+  bool onlyOneSecondVal = (++sndValPtr) == ms.end();
 
-    if (fstValCounter > 1 and sndValCounter > 1) {
-      almostHomogenous = false;
-      break;
-    }
-
-    fstValPtr++;
-    if (*fstValPtr == *sndValPtr)
-      break;
-    sndValPtr++;
-  }
-
-  return almostHomogenous;
+  return onlyOneFirstVal || onlyOneSecondVal;
 }
 
 
