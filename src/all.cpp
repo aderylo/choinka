@@ -11,6 +11,110 @@
 
 using namespace std;
 
+/** Multiset utils;
+ */
+
+set<size_t> multisetToSet(multiset<size_t> ms) {
+  set<size_t> result;
+  auto it = ms.begin();
+
+  while (it != ms.end()) {
+    result.insert(*it);
+    it = upper_bound(it, ms.end(), *it);
+  }
+
+  return result;
+}
+
+bool containsMoreValuesThan(const multiset<size_t>& ms, size_t x) {
+  size_t counter = 0;
+  auto it = ms.begin();
+
+  while (it != ms.end()) {
+    counter++;
+    it = upper_bound(it, ms.end(), *it);
+
+    if (counter > x)
+      break;
+  }
+
+  return (counter > x);
+}
+
+bool containsLessValuesThan(const multiset<size_t>& ms, size_t x) {
+  return (x > 0) && !containsMoreValuesThan(ms, x - 1);
+}
+
+bool occursMoreThanOnce(const multiset<size_t>& ms, size_t value) {
+  size_t counter = 0;
+  multiset<size_t>::iterator it;
+  it = (value > 0) ? upper_bound(ms.begin(), ms.end(), value - 1) : ms.begin();
+
+  while (it != ms.end() && counter < 2) {
+    counter++;
+    it++;
+  }
+
+  return (counter < 2);
+}
+
+/** Removes single elem from multiset;
+ */
+void removeSingleElem(multiset<size_t>& ms, size_t value) {
+  multiset<size_t>::iterator hit(ms.find(value));
+  if (hit != ms.end())
+    ms.erase(hit);
+}
+
+/** Multiset is almost homogenous if:
+ * - it is not empty
+ * - no more than one of it values repeats more than once
+ * - contains at maximum 2 values
+ */
+bool isAlmostHomogenous(multiset<size_t> ms) {
+  set<size_t> s;
+  size_t nonUniqueValues = 0;
+  bool almostHomogenous = false;
+
+  if (containsLessValuesThan(ms, 3)) {
+    s = multisetToSet(ms);
+
+    for (size_t value : s) {
+      if (occursMoreThanOnce(ms, value))
+        nonUniqueValues++;
+    }
+
+    almostHomogenous = (nonUniqueValues <= 1);
+    almostHomogenous &= !ms.empty();
+  }
+
+  return almostHomogenous;
+}
+
+
+/** If set is not almost almost homogenous returns empty set;
+ *  Otherwise returns representatives of this set thus making a
+ * result a multiset with maximum 3 elems.
+ */
+multiset<size_t> representativeElems(multiset<size_t> ms) {
+  multiset<size_t> result;
+  set<size_t> values;
+
+  if (isAlmostHomogenous(ms)) {
+    values = multisetToSet(ms);
+    for (size_t value : values) {
+      result.insert(value);
+      if (occursMoreThanOnce(ms, value))
+        result.insert(value);
+    }
+
+  } else {
+    result = {1, 2, 3};
+  }
+
+  return result;
+}
+
 /** Simple Tree represents a tree with nodes
  * numbered/labeled from 1 to n inclusive.
  */
@@ -159,15 +263,9 @@ SegmentTree::SegmentTree(vector<size_t> elems) {
   leafs = elems;
 }
 
-void removeOneElemOfGivenValue(multiset<size_t>& ms, size_t value) {
-  multiset<size_t>::iterator hit(ms.find(value));
-  if (hit != ms.end())
-    ms.erase(hit);
-}
-
 void SegmentTree::updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, size_t newValue,
                               size_t oldValue) {
-  removeOneElemOfGivenValue(tree.at(v).values, oldValue);
+  removeSingleElem(tree.at(v).values, oldValue);
   tree.at(v).values.insert(newValue);
 
   if (tl != tr) {
@@ -184,62 +282,9 @@ void SegmentTree::setValue(size_t elemIdx, size_t value) {
   leafs.at(elemIdx) = value;
 }
 
-
-bool containsMoreThanTwoValues(multiset<size_t> ms) {
-  if (ms.empty())
-    return false;
-
-  auto it = ms.begin();
-  size_t counter = 0;
-
-  while (it != ms.end()) {
-    counter++;
-    it = upper_bound(ms.begin(), ms.end(), *it);
-    if (counter > 2)
-      break;
-  }
-
-  return (counter > 2);
-}
-
-bool containsOneValue(multiset<size_t> ms) {
-  if (ms.empty())
-    return false;
-
-  auto it = ms.begin();
-  it = upper_bound(ms.begin(), ms.end(), *it);
-
-  return (it == ms.end());
-}
-
-bool isAlmostHomogenous(multiset<size_t> ms) {
-  if (ms.empty())
-    return true;
-
-  if (containsMoreThanTwoValues(ms))
-    return false;
-
-  if (containsOneValue(ms))
-    return true;
-
-  // now we know that mset contains exactly 2 values;
-  auto fstValPtr = ms.begin();
-  auto sndValPtr = upper_bound(ms.begin(), ms.end(), *fstValPtr);
-  auto sndVal = *sndValPtr;
-
-  bool onlyOneFirstVal = *(++fstValPtr) == sndVal;
-  bool onlyOneSecondVal = (++sndValPtr) == ms.end();
-
-  return onlyOneFirstVal || onlyOneSecondVal;
-}
-
-
 multiset<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t start, size_t end) {
-  // possible speed up, return only 3 elems or sth like false if one
-  // segment already is not homogenous;
-
   if (tl == start && tr == end)
-    return tree.at(v).values;
+    return representativeElems(tree.at(v).values);
 
   size_t tm = (tl + tr) / 2;
   multiset<size_t> result;
