@@ -7,6 +7,10 @@
 #include "simpleTree.hh"
 using namespace std;
 
+/** Christmas tree data structure
+ * Designed to answer all questions in less than nlogn.
+ */
+
 class ChristmasTree {
  public:
   explicit ChristmasTree(vector<size_t> treeDescription, vector<size_t> colours);
@@ -18,7 +22,6 @@ class ChristmasTree {
  private:
   SegmentTree segmentTree;
   vector<pair<size_t, size_t>> subtreeRanges;
-  // vector<size_t> preOrderMap; // key: node, value: idx in preOrder
 };
 
 ChristmasTree::ChristmasTree(vector<size_t> treeDescription, vector<size_t> colours) {

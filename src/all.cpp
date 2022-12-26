@@ -11,7 +11,6 @@
 
 using namespace std;
 
-
 /** Simple Tree represents a tree with nodes
  * numbered/labeled from 1 to n inclusive.
  */
@@ -86,6 +85,11 @@ vector<size_t> SimpleTree::getSubTreeSizes() {
 }
 
 
+/** SegmentTreeNode
+ * It stores segment it represents as well as the
+ * multiset of values stored in the leafs of its subtree.
+ */
+
 struct SegmentTreeNode {
   SegmentTreeNode(size_t start, size_t end, multiset<size_t> values) {
     this->start = start;
@@ -103,6 +107,9 @@ struct SegmentTreeNode {
   size_t start, end;
 };
 
+/** SegmentTree implementation.
+ * In each node all subtree leafs values are stored in a multiset.
+ */
 
 class SegmentTree {
  public:
@@ -152,9 +159,15 @@ SegmentTree::SegmentTree(vector<size_t> elems) {
   leafs = elems;
 }
 
+void removeOneElemOfGivenValue(multiset<size_t>& ms, size_t value) {
+  multiset<size_t>::iterator hit(ms.find(value));
+  if (hit != ms.end())
+    ms.erase(hit);
+}
+
 void SegmentTree::updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, size_t newValue,
                               size_t oldValue) {
-  tree.at(v).values.erase(oldValue);
+  removeOneElemOfGivenValue(tree.at(v).values, oldValue);
   tree.at(v).values.insert(newValue);
 
   if (tl != tr) {
@@ -212,25 +225,12 @@ bool isAlmostHomogenous(multiset<size_t> ms) {
   // now we know that mset contains exactly 2 values;
   auto fstValPtr = ms.begin();
   auto sndValPtr = upper_bound(ms.begin(), ms.end(), *fstValPtr);
-  size_t fstValCounter = 0, sndValCounter = 0;
-  bool almostHomogenous = true;
+  auto sndVal = *sndValPtr;
 
-  while (fstValPtr != ms.end() && sndValPtr != ms.end()) {
-    fstValCounter++;
-    sndValCounter++;
+  bool onlyOneFirstVal = *(++fstValPtr) == sndVal;
+  bool onlyOneSecondVal = (++sndValPtr) == ms.end();
 
-    if (fstValCounter > 1 and sndValCounter > 1) {
-      almostHomogenous = false;
-      break;
-    }
-
-    fstValPtr++;
-    if (*fstValPtr == *sndValPtr)
-      break;
-    sndValPtr++;
-  }
-
-  return almostHomogenous;
+  return onlyOneFirstVal || onlyOneSecondVal;
 }
 
 
@@ -260,6 +260,10 @@ bool SegmentTree::almostHomogenousSegment(size_t start, size_t end) {
 }
 
 
+/** Christmas tree data structure
+ * Designed to answer all questions in less than nlogn.
+ */
+
 class ChristmasTree {
  public:
   explicit ChristmasTree(vector<size_t> treeDescription, vector<size_t> colours);
@@ -271,7 +275,6 @@ class ChristmasTree {
  private:
   SegmentTree segmentTree;
   vector<pair<size_t, size_t>> subtreeRanges;
-  // vector<size_t> preOrderMap; // key: node, value: idx in preOrder
 };
 
 ChristmasTree::ChristmasTree(vector<size_t> treeDescription, vector<size_t> colours) {

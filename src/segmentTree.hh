@@ -9,6 +9,11 @@
 
 using namespace std;
 
+/** SegmentTreeNode
+ * It stores segment it represents as well as the
+ * multiset of values stored in the leafs of its subtree.
+ */
+
 struct SegmentTreeNode {
   SegmentTreeNode(size_t start, size_t end, multiset<size_t> values) {
     this->start = start;
@@ -26,6 +31,9 @@ struct SegmentTreeNode {
   size_t start, end;
 };
 
+/** SegmentTree implementation.
+ * In each node all subtree leafs values are stored in a multiset.
+ */
 
 class SegmentTree {
  public:
