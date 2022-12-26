@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# to use run "bash test.sh {path_to_program} {path_to_tests}"
+# for example: "bash test.sh build/main tests"
+
 files=$(ls $2 | grep .in)
 
 if [[ "$2" == "." ]]; then
