@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <set>
 #include <vector>
+#include "multiset.hh"
 
 using namespace std;
 
@@ -83,15 +84,9 @@ SegmentTree::SegmentTree(vector<size_t> elems) {
   leafs = elems;
 }
 
-void removeOneElemOfGivenValue(multiset<size_t> &ms, size_t value) {
-  multiset<size_t>::iterator hit(ms.find(value));
-  if (hit != ms.end())
-    ms.erase(hit);
-}
-
 void SegmentTree::updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, size_t newValue,
                               size_t oldValue) {
-  removeOneElemOfGivenValue(tree.at(v).values, oldValue);
+  removeSingleElem(tree.at(v).values, oldValue);
   tree.at(v).values.insert(newValue);
 
   if (tl != tr) {
@@ -108,62 +103,9 @@ void SegmentTree::setValue(size_t elemIdx, size_t value) {
   leafs.at(elemIdx) = value;
 }
 
-
-bool containsMoreThanTwoValues(multiset<size_t> ms) {
-  if (ms.empty())
-    return false;
-
-  auto it = ms.begin();
-  size_t counter = 0;
-
-  while (it != ms.end()) {
-    counter++;
-    it = upper_bound(ms.begin(), ms.end(), *it);
-    if (counter > 2)
-      break;
-  }
-
-  return (counter > 2);
-}
-
-bool containsOneValue(multiset<size_t> ms) {
-  if (ms.empty())
-    return false;
-
-  auto it = ms.begin();
-  it = upper_bound(ms.begin(), ms.end(), *it);
-
-  return (it == ms.end());
-}
-
-bool isAlmostHomogenous(multiset<size_t> ms) {
-  if (ms.empty())
-    return true;
-
-  if (containsMoreThanTwoValues(ms))
-    return false;
-
-  if (containsOneValue(ms))
-    return true;
-
-  // now we know that mset contains exactly 2 values;
-  auto fstValPtr = ms.begin();
-  auto sndValPtr = upper_bound(ms.begin(), ms.end(), *fstValPtr);
-  auto sndVal = *sndValPtr;
-
-  bool onlyOneFirstVal = *(++fstValPtr) == sndVal;
-  bool onlyOneSecondVal = (++sndValPtr) == ms.end();
-
-  return onlyOneFirstVal || onlyOneSecondVal;
-}
-
-
 multiset<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t start, size_t end) {
-  // possible speed up, return only 3 elems or sth like false if one
-  // segment already is not homogenous;
-
   if (tl == start && tr == end)
-    return tree.at(v).values;
+    return representativeElems(tree.at(v).values);
 
   size_t tm = (tl + tr) / 2;
   multiset<size_t> result;
