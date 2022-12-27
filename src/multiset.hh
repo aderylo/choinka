@@ -4,9 +4,17 @@
 #include <assert.h>
 #include <algorithm>
 #include <set>
+#include <tuple>
 #include <unordered_map>
 
 using namespace std;
+
+struct dominantValues {
+  size_t fstValue;
+  size_t fstCount;
+  size_t sndValue;
+  size_t sndCount;
+};
 
 /** Choinka utils;
  */
@@ -89,6 +97,47 @@ vector<size_t> representativeElemsFaster(const vector<size_t> &a, const vector<s
   }
 
   return result;
+}
+
+dominantValues getDominant(dominantValues a, dominantValues b) {
+  vector<pair<size_t, size_t>> vec;
+  if (a.fstValue == b.fstValue) {
+    a.fstCount += b.fstCount;
+    b.fstCount = 0;
+  }
+  if (a.fstValue == b.sndValue) {
+    a.fstCount += b.sndCount;
+    b.sndCount = 0;
+  }
+  if (a.sndValue == b.fstValue) {
+    a.sndCount += b.fstCount;
+    b.fstCount = 0;
+  }
+
+  if (a.sndValue == b.sndValue) {
+    a.sndCount += b.sndCount;
+    a.sndCount = 0;
+  }
+
+
+  vec.push_back({a.fstCount, a.fstValue});
+  vec.push_back({a.sndCount, a.sndValue});
+  vec.push_back({b.fstCount, b.fstValue});
+  vec.push_back({b.sndCount, b.sndValue});
+
+
+  sort(vec.begin(), vec.end());
+  return {
+      .fstValue = vec.at(3).second,
+      .fstCount = vec.at(3).first,
+      .sndValue = vec.at(2).second,
+      .sndCount = vec.at(2).first,
+  };
+}
+
+
+bool isAlmostHomogenousFaster(dominantValues dominant, size_t subtreeSize) {
+  return (subtreeSize - dominant.fstCount <= 1);
 }
 
 

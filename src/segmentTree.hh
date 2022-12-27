@@ -29,21 +29,21 @@ class SegmentTree {
 
   void update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_val);
 
-  vector<size_t> query(size_t v, size_t tl, size_t tr, size_t l, size_t r);
+  dominantValues query(size_t v, size_t tl, size_t tr, size_t l, size_t r);
 
   vector<size_t> leafs;
-  vector<vector<size_t>> tree;
+  vector<dominantValues> tree;
 };
 
 
 void SegmentTree::build(vector<size_t> a, size_t v, size_t tl, size_t tr) {
   if (tl == tr) {
-    tree[v] = {a[tl]};
+    tree[v] = {a[tl], 1, 0, 0};
   } else {
     int tm = (tl + tr) / 2;
     build(a, v * 2, tl, tm);
     build(a, v * 2 + 1, tm + 1, tr);
-    tree[v] = representativeElemsFaster(tree[v * 2], tree[v * 2 + 1]);
+    tree[v] = getDominant(tree[v * 2], tree[v * 2 + 1]);
   }
 }
 
@@ -55,14 +55,14 @@ void SegmentTree::update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_
     else
       update(v * 2 + 1, tm + 1, tr, pos, new_val);
 
-    tree[v] = representativeElemsFaster(tree[v * 2], tree[v * 2 + 1]);
+    tree[v] = getDominant(tree[v * 2], tree[v * 2 + 1]);
   } else {
-    tree[v] = {new_val};
+    tree[v] = {new_val, 1};
     leafs[pos] = new_val;
   }
 }
 
-vector<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, size_t r) {
+dominantValues SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, size_t r) {
   if (l > r)
     return {};
   if (l == tl && r == tr) {
@@ -72,19 +72,19 @@ vector<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, size
   size_t tm = (tl + tr) / 2;
   auto f = query(v * 2, tl, tm, l, min(r, tm));
   auto s = query(v * 2 + 1, tm + 1, tr, max(l, tm + 1), r);
-  return representativeElemsFaster(f, s);  // same here, max 6 elements
+  return getDominant(f, s);
 }
 
 SegmentTree::SegmentTree(vector<size_t> elems) {
-  tree = vector<vector<size_t>>(MULTIPLE * elems.size());
+  tree = vector<dominantValues>(MULTIPLE * elems.size());
   leafs = elems;
   build(elems, 1, 0, elems.size() - 1);
 }
 
 bool SegmentTree::almostHomogenousSegment(size_t start, size_t end) {
-  auto representatives = query(1, 0, leafs.size() - 1, start, end);
+  auto dominantColor = query(1, 0, leafs.size() - 1, start, end);
   // assert(representatives.size() <= 4);
-  return isAlmostHomogenousFast(representatives);
+  return isAlmostHomogenousFaster(dominantColor, end - start + 1);
 }
 
 void SegmentTree::updateValue(size_t pos, size_t value) {
