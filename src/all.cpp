@@ -34,7 +34,7 @@ vector<size_t> join(vector<size_t> a, vector<size_t> b) {
 }
 
 bool isAlmostHomogenousFast(const vector<size_t> &vec) {
-  assert(vec.size() <= 8);
+  // assert(vec.size() <= 8);
   bool good = true;
   size_t repeatedValues = 0;
   unordered_map<size_t, size_t> valueCount;
@@ -54,7 +54,7 @@ bool isAlmostHomogenousFast(const vector<size_t> &vec) {
 }
 
 vector<size_t> representativeElemsFast(const vector<size_t> &vec) {
-  assert(vec.size() <= 8);
+  // assert(vec.size() <= 8);
   vector<size_t> result;
   auto valueCount = getValueCount(vec);
 
@@ -69,11 +69,28 @@ vector<size_t> representativeElemsFast(const vector<size_t> &vec) {
     for (auto const &[k, v] : valueCount) {
       if (i < 3) {
         result.push_back(k);
+        result.push_back(k);
         i++;
       } else {
         break;
       }
     }
+  }
+
+  return result;
+}
+
+vector<size_t> representativeElemsFaster(const vector<size_t> &a, const vector<size_t> &b) {
+  vector<size_t> result;
+  if (a.size() == 1 and b.size() == 1) {
+    result = {a.front(), b.front()};
+  } else if (a.size() > 3)
+    result = a;
+  else if (b.size() > 3)
+    result = b;
+  else {
+    auto vec = join(a, b);
+    result = representativeElemsFast(vec);
   }
 
   return result;
@@ -186,8 +203,7 @@ void SegmentTree::build(vector<size_t> a, size_t v, size_t tl, size_t tr) {
     int tm = (tl + tr) / 2;
     build(a, v * 2, tl, tm);
     build(a, v * 2 + 1, tm + 1, tr);
-    vector<size_t> vec = join(tree[v * 2], tree[v * 2 + 1]);
-    tree[v] = representativeElemsFast(vec);
+    tree[v] = representativeElemsFaster(tree[v * 2], tree[v * 2 + 1]);
   }
 }
 
@@ -199,8 +215,7 @@ void SegmentTree::update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_
     else
       update(v * 2 + 1, tm + 1, tr, pos, new_val);
 
-    vector<size_t> vec = join(tree[v * 2], tree[v * 2 + 1]);
-    tree[v] = representativeElemsFast(vec);
+    tree[v] = representativeElemsFaster(tree[v * 2], tree[v * 2 + 1]);
   } else {
     tree[v] = {new_val};
     leafs[pos] = new_val;
@@ -217,8 +232,7 @@ vector<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, size
   size_t tm = (tl + tr) / 2;
   auto f = query(v * 2, tl, tm, l, min(r, tm));
   auto s = query(v * 2 + 1, tm + 1, tr, max(l, tm + 1), r);
-  vector<size_t> vec = join(f, s);
-  return representativeElemsFast(vec);  // same here, max 6 elements
+  return representativeElemsFaster(f, s);  // same here, max 6 elements
 }
 
 SegmentTree::SegmentTree(vector<size_t> elems) {
@@ -229,7 +243,7 @@ SegmentTree::SegmentTree(vector<size_t> elems) {
 
 bool SegmentTree::almostHomogenousSegment(size_t start, size_t end) {
   auto representatives = query(1, 0, leafs.size() - 1, start, end);
-  assert(representatives.size() <= 4);
+  // assert(representatives.size() <= 4);
   return isAlmostHomogenousFast(representatives);
 }
 
