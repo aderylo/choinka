@@ -10,32 +10,6 @@
 
 using namespace std;
 
-/** SegmentTreeNode
- * It stores segment it represents as well as the
- * multiset of values stored in the leafs of its subtree.
- */
-
-struct SegmentTreeNode {
-  SegmentTreeNode(size_t start, size_t end, multiset<size_t> values) {
-    this->start = start;
-    this->end = end;
-    this->values = values;
-  }
-
-  SegmentTreeNode() {
-    this->start = 0;
-    this->end = 0;
-    this->values = multiset<size_t>();
-  }
-
-  multiset<size_t> values;
-  size_t start, end;
-};
-
-/** SegmentTree implementation.
- * In each node all subtree leafs values are stored in a multiset.
- */
-
 class SegmentTree {
  public:
   explicit SegmentTree(vector<size_t> elems);
@@ -43,86 +17,79 @@ class SegmentTree {
 
   bool almostHomogenousSegment(size_t start, size_t end);
 
-  void setValue(size_t elemIdx, size_t value);
+  void updateValue(size_t pos, size_t value);
 
  private:
-  void updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, size_t newValue,
-                   size_t oldValue);
   void build(vector<size_t> a, size_t v, size_t tl, size_t tr);
 
-  multiset<size_t> query(size_t v, size_t tl, size_t tr, size_t start, size_t end);
+  void update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_val);
 
-  bool checkIfHomogenousSegment(size_t start, size_t end, size_t v, size_t tl, size_t tr);
+  multiset<size_t> query(size_t v, size_t tl, size_t tr, size_t l, size_t r);
 
-  vector<SegmentTreeNode> tree;
   vector<size_t> leafs;
+  vector<multiset<size_t>> tree;
 };
+
 
 void SegmentTree::build(vector<size_t> a, size_t v, size_t tl, size_t tr) {
   if (tl == tr) {
-    tree.at(v) = SegmentTreeNode(tl, tr, {a.at(tl)});
-  } else if (tl < tr) {
-    size_t tm = (tl + tr) / 2;
+    tree[v] = {a[tl]};
+  } else {
+    int tm = (tl + tr) / 2;
+    vector<size_t> vec;
 
     build(a, v * 2, tl, tm);
     build(a, v * 2 + 1, tm + 1, tr);
-
-    multiset<size_t> values = tree.at(v * 2).values;
-    auto it = tree.at(v * 2 + 1).values.begin();
-    while (it != tree.at(v * 2 + 1).values.end()) {
-      values.insert(*it);
-      it++;
-    }
-
-    tree.at(v) = SegmentTreeNode(tl, tr, values);
+    merge(tree[v * 2].begin(), tree[v * 2].end(), tree[v * 2 + 1].begin(), tree[v * 2 + 1].end(),
+          back_inserter(vec));
+    tree[v] = multiset<size_t>(vec.begin(), vec.end());
+    // this should be linear according to
+    // https://cplusplus.com/reference/set/multiset/multiset/
   }
+}
+
+void SegmentTree::update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_val) {
+  tree[v].erase(tree[v].find(leafs[pos]));
+  tree[v].insert(new_val);
+  if (tl != tr) {
+    int tm = (tl + tr) / 2;
+    if (pos <= tm)
+      update(v * 2, tl, tm, pos, new_val);
+    else
+      update(v * 2 + 1, tm + 1, tr, pos, new_val);
+  } else {
+    leafs[pos] = new_val;
+  }
+}
+
+multiset<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, size_t r) {
+  if (l > r)
+    return {};
+  if (l == tl && r == tr) {
+    return representativeElems(tree[v]);  // log n
+  }
+
+  size_t tm = (tl + tr) / 2;
+  auto f = query(v * 2, tl, tm, l, min(r, tm));
+  auto s = query(v * 2 + 1, tm + 1, tr, max(l, tm + 1), r);
+  f.merge(s);                     // this is constant because f and s contain at most 3 elems each
+  return representativeElems(f);  // same here, max 6 elements
 }
 
 SegmentTree::SegmentTree(vector<size_t> elems) {
-  tree = vector<SegmentTreeNode>(MULTIPLE * elems.size());
-  build(elems, 1, 0, elems.size() - 1);
+  tree = vector<multiset<size_t>>(MULTIPLE * elems.size());
   leafs = elems;
+  build(elems, 1, 0, elems.size() - 1);
 }
-
-void SegmentTree::updateValue(size_t v, size_t elemIdx, size_t tl, size_t tr, size_t newValue,
-                              size_t oldValue) {
-  removeSingleElem(tree.at(v).values, oldValue);
-  tree.at(v).values.insert(newValue);
-
-  if (tl != tr) {
-    size_t tm = (tl + tr) / 2;
-    if (elemIdx <= tm)
-      updateValue(v * 2, elemIdx, tl, tm, newValue, oldValue);
-    else
-      updateValue(v * 2 + 1, elemIdx, tm + 1, tr, newValue, oldValue);
-  }
-}
-
-void SegmentTree::setValue(size_t elemIdx, size_t value) {
-  updateValue(1, elemIdx, 0, leafs.size() - 1, value, leafs.at(elemIdx));
-  leafs.at(elemIdx) = value;
-}
-
-multiset<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t start, size_t end) {
-  if (tl == start && tr == end)
-    return representativeElems(tree.at(v).values);
-
-  size_t tm = (tl + tr) / 2;
-  multiset<size_t> result;
-
-  if (start <= tm)
-    result.merge(query(v * 2, tl, tm, start, tm));
-
-  if (end > tm)
-    result.merge(query(v * 2 + 1, tm + 1, tr, tm + 1, end));
-
-  return result;
-}
-
 
 bool SegmentTree::almostHomogenousSegment(size_t start, size_t end) {
-  auto segment = query(1, 0, leafs.size() - 1, start, end);
-  return isAlmostHomogenous(segment);
+  auto representatives = query(1, 0, leafs.size() - 1, start, end);
+  return isAlmostHomogenous(representatives);
 }
+
+void SegmentTree::updateValue(size_t pos, size_t value) {
+  update(1, 0, leafs.size() - 1, pos, value);
+}
+
 
 #endif  // CHOINKA_SEGMENT_TREE

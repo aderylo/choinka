@@ -80,7 +80,6 @@ bool isAlmostHomogenous(multiset<size_t> ms) {
     }
 
     almostHomogenous = (nonUniqueValues <= 1);
-    almostHomogenous &= !ms.empty();
   }
 
   return almostHomogenous;
@@ -90,6 +89,8 @@ bool isAlmostHomogenous(multiset<size_t> ms) {
 /** If set is not almost almost homogenous returns empty set;
  *  Otherwise returns representatives of this set thus making a
  * result a multiset with maximum 3 elems.
+ *
+ * Complexity: log(n)
  */
 multiset<size_t> representativeElems(multiset<size_t> ms) {
   multiset<size_t> result;

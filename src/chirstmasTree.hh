@@ -48,7 +48,7 @@ bool ChristmasTree::isSubtreeAlmostSingleColour(size_t node) {
 
 void ChristmasTree::changeNodeColour(size_t node, size_t colour) {
   auto preOrderIdx = subtreeRanges.at(node).first - 1;
-  segmentTree.setValue(preOrderIdx, colour);
+  segmentTree.updateValue(preOrderIdx, colour);
 }
 
 
