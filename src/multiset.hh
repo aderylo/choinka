@@ -105,7 +105,16 @@ multiset<size_t> representativeElems(multiset<size_t> ms) {
     }
 
   } else {
-    result = {1, 2, 3};
+    if (containsMoreValuesThan(ms, 2)) {
+      auto it1 = ms.begin();
+      auto it2 = upper_bound(it1, ms.end(), *it1);
+      auto it3 = upper_bound(it2, ms.end(), *it2);
+      result = {*it1, *it2, *it3};
+    } else {
+      auto it1 = ms.begin();
+      auto it2 = upper_bound(it1, ms.end(), *it1);
+      result = {*it1, *it1, *it2, *it2};
+    }
   }
 
   return result;

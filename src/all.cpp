@@ -110,7 +110,16 @@ multiset<size_t> representativeElems(multiset<size_t> ms) {
     }
 
   } else {
-    result = {1, 2, 3};
+    if (containsMoreValuesThan(ms, 2)) {
+      auto it1 = ms.begin();
+      auto it2 = upper_bound(it1, ms.end(), *it1);
+      auto it3 = upper_bound(it2, ms.end(), *it2);
+      result = {*it1, *it2, *it3};
+    } else {
+      auto it1 = ms.begin();
+      auto it2 = upper_bound(it1, ms.end(), *it1);
+      result = {*it1, *it1, *it2, *it2};
+    }
   }
 
   return result;
@@ -190,28 +199,6 @@ vector<size_t> SimpleTree::getSubTreeSizes() {
 }
 
 
-/** SegmentTreeNode
- * It stores segment it represents as well as the
- * multiset of values stored in the leafs of its subtree.
- */
-
-struct SegmentTreeNode {
-  SegmentTreeNode(size_t start, size_t end, multiset<size_t> values) {
-    this->start = start;
-    this->end = end;
-    this->values = values;
-  }
-
-  SegmentTreeNode() {
-    this->start = 0;
-    this->end = 0;
-    this->values = multiset<size_t>();
-  }
-
-  multiset<size_t> values;
-  size_t start, end;
-};
-
 /** SegmentTree implementation.
  * In each node all subtree leafs values are stored in a multiset.
  */
@@ -246,24 +233,28 @@ void SegmentTree::build(vector<size_t> a, size_t v, size_t tl, size_t tr) {
 
     build(a, v * 2, tl, tm);
     build(a, v * 2 + 1, tm + 1, tr);
-    merge(tree[v * 2].begin(), tree[v * 2].end(), tree[v * 2 + 1].begin(), tree[v * 2 + 1].end(),
-          back_inserter(vec));
-    tree[v] = multiset<size_t>(vec.begin(), vec.end());
-    // this should be linear according to
-    // https://cplusplus.com/reference/set/multiset/multiset/
+
+    auto f = representativeElems(tree[v * 2]);
+    auto s = representativeElems(tree[v * 2 + 1]);
+    f.merge(s);
+    tree[v] = representativeElems(f);
   }
 }
 
 void SegmentTree::update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_val) {
-  tree[v].erase(tree[v].find(leafs[pos]));
-  tree[v].insert(new_val);
   if (tl != tr) {
     int tm = (tl + tr) / 2;
     if (pos <= tm)
       update(v * 2, tl, tm, pos, new_val);
     else
       update(v * 2 + 1, tm + 1, tr, pos, new_val);
+
+    auto f = representativeElems(tree[v * 2]);
+    auto s = representativeElems(tree[v * 2 + 1]);
+    f.merge(s);
+    tree[v] = representativeElems(f);
   } else {
+    tree[v] = {new_val};
     leafs[pos] = new_val;
   }
 }
@@ -272,7 +263,7 @@ multiset<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, si
   if (l > r)
     return {};
   if (l == tl && r == tr) {
-    return representativeElems(tree[v]);  // log n
+    return representativeElems(tree[v]);  // constant since tree[v] contains at most 4 elems;
   }
 
   size_t tm = (tl + tr) / 2;
