@@ -10,6 +10,10 @@
 
 using namespace std;
 
+/** SegmentTree implementation.
+ * In each node all subtree leafs values are stored in a multiset.
+ */
+
 class SegmentTree {
  public:
   explicit SegmentTree(vector<size_t> elems);
