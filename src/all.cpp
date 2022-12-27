@@ -1,5 +1,6 @@
 #define MULTIPLE 4
 
+#include <assert.h>
 #include <stdlib.h>
 #include <algorithm>
 #include <iostream>
@@ -234,9 +235,10 @@ void SegmentTree::build(vector<size_t> a, size_t v, size_t tl, size_t tr) {
     build(a, v * 2, tl, tm);
     build(a, v * 2 + 1, tm + 1, tr);
 
-    auto f = representativeElems(tree[v * 2]);
-    auto s = representativeElems(tree[v * 2 + 1]);
+    auto f = tree[v * 2];
+    auto s = tree[v * 2 + 1];
     f.merge(s);
+    assert(f.size() <= 8);
     tree[v] = representativeElems(f);
   }
 }
@@ -249,9 +251,10 @@ void SegmentTree::update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_
     else
       update(v * 2 + 1, tm + 1, tr, pos, new_val);
 
-    auto f = representativeElems(tree[v * 2]);
-    auto s = representativeElems(tree[v * 2 + 1]);
+    auto f = tree[v * 2];
+    auto s = tree[v * 2 + 1];
     f.merge(s);
+    assert(f.size() <= 8);
     tree[v] = representativeElems(f);
   } else {
     tree[v] = {new_val};
@@ -263,13 +266,14 @@ multiset<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, si
   if (l > r)
     return {};
   if (l == tl && r == tr) {
-    return representativeElems(tree[v]);  // constant since tree[v] contains at most 4 elems;
+    return tree[v];  // constant since tree[v] contains at most 4 elems;
   }
 
   size_t tm = (tl + tr) / 2;
   auto f = query(v * 2, tl, tm, l, min(r, tm));
   auto s = query(v * 2 + 1, tm + 1, tr, max(l, tm + 1), r);
-  f.merge(s);                     // this is constant because f and s contain at most 3 elems each
+  f.merge(s);
+  assert(f.size() <= 8);
   return representativeElems(f);  // same here, max 6 elements
 }
 
@@ -281,6 +285,7 @@ SegmentTree::SegmentTree(vector<size_t> elems) {
 
 bool SegmentTree::almostHomogenousSegment(size_t start, size_t end) {
   auto representatives = query(1, 0, leafs.size() - 1, start, end);
+  assert(representatives.size() <= 4);
   return isAlmostHomogenous(representatives);
 }
 
