@@ -84,10 +84,10 @@ vector<size_t> representativeElemsFaster(const vector<size_t> &a, const vector<s
   vector<size_t> result;
   if (a.size() == 1 and b.size() == 1) {
     result = {a.front(), b.front()};
-  } else if (a.size() > 3)
-    result = a;
-  else if (b.size() > 3)
-    result = b;
+  } else if (a.size() > 3 || b.size() > 3)
+    result = (a.size() > 3) ? a : b;
+  else if (a.empty() || b.empty())
+    result = (a.empty()) ? b : a;
   else {
     auto vec = join(a, b);
     result = representativeElemsFast(vec);
@@ -95,7 +95,6 @@ vector<size_t> representativeElemsFaster(const vector<size_t> &a, const vector<s
 
   return result;
 }
-
 
 /** Simple Tree represents a tree with nodes
  * numbered/labeled from 1 to n inclusive.
