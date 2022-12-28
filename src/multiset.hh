@@ -29,10 +29,13 @@ vector<size_t> join(vector<size_t> a, vector<size_t> b) {
 }
 
 bool isAlmostHomogenousFast(const vector<size_t> &vec) {
-  // assert(vec.size() <= 8);
   bool good = true;
   size_t repeatedValues = 0;
   unordered_map<size_t, size_t> valueCount;
+
+  if (!vec.empty() && vec.front() == 0)
+    good = false;
+
   for (const auto &val : vec) {
     valueCount[val]++;
   }
@@ -49,7 +52,6 @@ bool isAlmostHomogenousFast(const vector<size_t> &vec) {
 }
 
 vector<size_t> representativeElemsFast(const vector<size_t> &vec) {
-  // assert(vec.size() <= 8);
   vector<size_t> result;
   auto valueCount = getValueCount(vec);
 
@@ -60,16 +62,7 @@ vector<size_t> representativeElemsFast(const vector<size_t> &vec) {
         result.push_back(k);
     }
   } else {
-    int i = 0;
-    for (auto const &[k, v] : valueCount) {
-      if (i < 3) {
-        result.push_back(k);
-        result.push_back(k);
-        i++;
-      } else {
-        break;
-      }
-    }
+    result.push_back(0);
   }
 
   return result;
@@ -77,12 +70,14 @@ vector<size_t> representativeElemsFast(const vector<size_t> &vec) {
 
 vector<size_t> representativeElemsFaster(const vector<size_t> &a, const vector<size_t> &b) {
   vector<size_t> result;
-  if (a.size() == 1 and b.size() == 1) {
+  if (a.empty() || b.empty())
+    result = (a.empty()) ? b : a;
+  else if (a.front() == 0 || b.front() == 0)
+    result = {0};
+  else if (a.size() == 1 and b.size() == 1) {
     result = {a.front(), b.front()};
   } else if (a.size() > 3 || b.size() > 3)
-    result = (a.size() > 3) ? a : b;
-  else if (a.empty() || b.empty())
-    result = (a.empty()) ? b : a;
+    result = {0};
   else {
     auto vec = join(a, b);
     result = representativeElemsFast(vec);
