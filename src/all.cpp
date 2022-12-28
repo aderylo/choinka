@@ -185,41 +185,38 @@ class SegmentTree {
   void updateValue(size_t pos, size_t value);
 
  private:
-  void build(vector<size_t> a, size_t v, size_t tl, size_t tr);
+  void build(vector<size_t> a);
 
-  void update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_val);
+  void update(size_t pos, size_t new_val);
 
   vector<size_t> query(size_t v, size_t tl, size_t tr, size_t l, size_t r);
 
-  vector<size_t> leafs;
   vector<vector<size_t>> tree;
+  size_t base;
 };
 
 
-void SegmentTree::build(vector<size_t> a, size_t v, size_t tl, size_t tr) {
-  if (tl == tr) {
-    tree[v] = {a[tl]};
-  } else {
-    int tm = (tl + tr) / 2;
-    build(a, v * 2, tl, tm);
-    build(a, v * 2 + 1, tm + 1, tr);
-    tree[v] = representativeElemsFaster(tree[v * 2], tree[v * 2 + 1]);
+void SegmentTree::build(vector<size_t> arr) {
+  size_t n = base;
+
+  // insert leaf nodes in tree
+  for (int i = 0; i < arr.size(); i++)
+    tree[n + i] = {arr[i]};
+
+  // build the tree by calculating parents
+  for (int i = n - 1; i > 0; --i) {
+    tree[i] = representativeElemsFaster(tree[i << 1], tree[i << 1 | 1]);
   }
 }
 
-void SegmentTree::update(size_t v, size_t tl, size_t tr, size_t pos, size_t new_val) {
-  if (tl != tr) {
-    int tm = (tl + tr) / 2;
-    if (pos <= tm)
-      update(v * 2, tl, tm, pos, new_val);
-    else
-      update(v * 2 + 1, tm + 1, tr, pos, new_val);
+void SegmentTree::update(size_t pos, size_t new_val) {
+  // set value at position p
+  tree.at(pos + base) = {new_val};
+  pos = pos + base;
 
-    tree[v] = representativeElemsFaster(tree[v * 2], tree[v * 2 + 1]);
-  } else {
-    tree[v] = {new_val};
-    leafs[pos] = new_val;
-  }
+  // move upward and update parents
+  for (int i = pos; i > 1; i >>= 1)
+    tree[i >> 1] = representativeElemsFaster(tree[i], tree[i ^ 1]);
 }
 
 vector<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, size_t r) {
@@ -235,22 +232,32 @@ vector<size_t> SegmentTree::query(size_t v, size_t tl, size_t tr, size_t l, size
   return representativeElemsFaster(f, s);  // same here, max 6 elements
 }
 
+size_t calculateBase(vector<size_t> elems) {
+  size_t n = elems.size() - 1;
+  size_t counter = 0;
+
+  while (n > 0) {
+    n /= 2;
+    counter++;
+  }
+
+  return 1 << counter;
+}
+
 SegmentTree::SegmentTree(vector<size_t> elems) {
-  tree = vector<vector<size_t>>(MULTIPLE * elems.size());
-  leafs = elems;
-  build(elems, 1, 0, elems.size() - 1);
+  base = calculateBase(elems);
+  tree = vector<vector<size_t>>(2 * base);
+  build(elems);
 }
 
 bool SegmentTree::almostHomogenousSegment(size_t start, size_t end) {
-  auto representatives = query(1, 0, leafs.size() - 1, start, end);
-  // assert(representatives.size() <= 4);
+  auto representatives = query(1, 0, base - 1, start, end);
   return isAlmostHomogenousFast(representatives);
 }
 
 void SegmentTree::updateValue(size_t pos, size_t value) {
-  update(1, 0, leafs.size() - 1, pos, value);
+  update(pos, value);
 }
-
 
 /** Christmas tree data structure
  * Designed to answer all questions in less than nlogn.
